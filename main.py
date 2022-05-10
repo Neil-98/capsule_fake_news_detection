@@ -16,13 +16,13 @@ tf.set_random_seed(0)
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--embedding_type', type=str, default='static',
+parser.add_argument('--embedding_type', type=str, default='nonstatic',
                     help='Options: rand (randomly initialized word embeddings), static (pre-trained embeddings from word2vec, static during learning), nonstatic (pre-trained embeddings, tuned during learning), multichannel (two embedding channels, one static and one nonstatic)')
 
 parser.add_argument('--dataset', type=str, default='ISOT',
                     help='Options: reuters_multilabel_dataset, MR_dataset, SST_dataset, ISOT')
 
-parser.add_argument('--loss_type', type=str, default='margin_loss',
+parser.add_argument('--loss_type', type=str, default='cross_entropy',
                     help='margin_loss, spread_loss, cross_entropy')
 
 parser.add_argument('--model_type', type=str, default='long_text',
@@ -44,40 +44,44 @@ args = parser.parse_args()
 params = vars(args)
 print(json.dumps(params, indent = 2))
 
+def rectify_storage_err(n_array):
+    return n_array.item()
 
 def load_data(dataset):
-    train, train_label = [],[]
-    dev, dev_label = [],[]
-    test, test_label = [],[]
-    
-    f = h5py.File('data/'+dataset+'.hdf5', 'r')
-    print('loading data...')    
+    train, train_label = [], []
+    dev, dev_label = [], []
+    test, test_label = [], []
+
+    f = h5py.File('data/' + dataset + '.hdf5', 'r')
+    print('loading data...')
     print(dataset)
     print("Keys: %s" % f.keys())
-  
+
     w2v = list(f['w2v'])
     train = list(f['train'])
-    train_label = list(f['train_label'])
+    train_label = list(map(rectify_storage_err, list(f['train_label'])))
+    # train_label = list(f['train_label'].apply(lambda x: x.item()))
+    # print(type(train_label))
     if args.use_orphan:
         args.num_classes = max(train_label) + 1
-      
+
     if len(list(f['test'])) == 0:
         args.has_test = 0
     else:
         args.has_test = 1
         test = list(f['test'])
-        test_label = list(f['test_label'])
-    
+        test_label = list(map(rectify_storage_err, list(f['test_label'])))
+
     for i, v in enumerate(train):
-        if np.sum(v) == 0:        
-            del(train[i])     
-            del(train_label[i])
-    
+        if np.sum(v) == 0:
+            del (train[i])
+            del (train_label[i])
+
     for i, v in enumerate(test):
         if np.sum(v) == 0:
-            del(test[i])
-            del(test_label[i])
-    
+            del (test[i])
+            del (test_label[i])
+
     train, dev, train_label, dev_label = train_test_split(train, train_label, test_size=0.1, random_state=0)
     return train, train_label, test, test_label, dev, dev_label, w2v
 
