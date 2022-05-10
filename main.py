@@ -7,7 +7,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import accuracy_score
 from sklearn.cross_validation import train_test_split
 from loss import spread_loss, cross_entropy, margin_loss
-from network import baseline_model_kimcnn, baseline_model_cnn, capsule_model_A, capsule_model_B
+from network import baseline_model_kimcnn, baseline_model_cnn, capsule_model_A, capsule_model_B, short_text_capsule_model, long_text_capsule_model
 from sklearn.utils import shuffle
 
 tf.reset_default_graph()
@@ -19,14 +19,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--embedding_type', type=str, default='static',
                     help='Options: rand (randomly initialized word embeddings), static (pre-trained embeddings from word2vec, static during learning), nonstatic (pre-trained embeddings, tuned during learning), multichannel (two embedding channels, one static and one nonstatic)')
 
-parser.add_argument('--dataset', type=str, default='reuters_multilabel_dataset',
-                    help='Options: reuters_multilabel_dataset, MR_dataset, SST_dataset')
+parser.add_argument('--dataset', type=str, default='ISOT',
+                    help='Options: reuters_multilabel_dataset, MR_dataset, SST_dataset, ISOT')
 
 parser.add_argument('--loss_type', type=str, default='margin_loss',
                     help='margin_loss, spread_loss, cross_entropy')
 
-parser.add_argument('--model_type', type=str, default='capsule-B',
-                    help='CNN, KIMCNN, capsule-A, capsule-B')
+parser.add_argument('--model_type', type=str, default='long_text',
+                    help='CNN, KIMCNN, capsule-A, capsule-B, short_text, long_text')
 
 parser.add_argument('--has_test', type=int, default=1, help='If data has test, we use it. Otherwise, we use CV on folds')    
 parser.add_argument('--has_dev', type=int, default=1, help='If data has dev, we use it, otherwise we split from train')    
@@ -50,7 +50,7 @@ def load_data(dataset):
     dev, dev_label = [],[]
     test, test_label = [],[]
     
-    f = h5py.File(dataset+'.hdf5', 'r') 
+    f = h5py.File('data/'+dataset+'.hdf5', 'r')
     print('loading data...')    
     print(dataset)
     print("Keys: %s" % f.keys())
@@ -166,7 +166,11 @@ if args.model_type == 'capsule-B':
 if args.model_type == 'CNN':    
     poses, activations = baseline_model_cnn(X_embedding, args.num_classes)
 if args.model_type == 'KIMCNN':    
-    poses, activations = baseline_model_kimcnn(X_embedding, args.max_sent, args.num_classes)   
+    poses, activations = baseline_model_kimcnn(X_embedding, args.max_sent, args.num_classes)
+if args.model_type == 'short_text':    
+    poses, activations = short_text_capsule_model(X_embedding, args.num_classes)
+if args.model_type == 'long_text':    
+    poses, activations = long_text_capsule_model(X_embedding, args.num_classes)
     
 if args.loss_type == 'spread_loss':
     loss = spread_loss(y, activations, margin)
