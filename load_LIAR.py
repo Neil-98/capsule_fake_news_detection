@@ -183,34 +183,30 @@ party_train = keras.utils.to_categorical(train_data['party_id'], num_classes=num
 state_train = keras.utils.to_categorical(train_data['state_id'], num_classes=num_state)
 job_train = keras.utils.to_categorical(train_data['job_id'], num_classes=num_job)
 
-#X_train_meta = party_train
-X_train_meta = np.hstack((party_train, state_train, job_train))
-
 party_val = keras.utils.to_categorical(val_data['party_id'], num_classes=num_party)
 state_val = keras.utils.to_categorical(val_data['state_id'], num_classes=num_state)
 job_val = keras.utils.to_categorical(val_data['job_id'], num_classes=num_job)
-
-#X_val_meta = party_val
-X_val_meta = np.hstack((party_val, state_val, job_val))
 
 party_test = keras.utils.to_categorical(test_data['party_id'], num_classes=num_party)
 state_test = keras.utils.to_categorical(test_data['state_id'], num_classes=num_state)
 job_test = keras.utils.to_categorical(test_data['job_id'], num_classes=num_job)
 
-#X_test_meta = party_test
-X_test_meta = np.hstack((party_test, state_test, job_test))
-
+#save hdf5
 filename = 'LIAR.hdf5'
 with h5py.File(filename, "w") as f:
     f["w2v"] = np.array(embedding_matrix)
     f['train'] = X_train
     f['train_label'] = Y_train
-    f['train_meta'] = X_train_meta
+    f['train_party'] = party_train
+    f['train_job'] = job_train
+    f['train_state'] = state_train
     f['test'] = X_test
     f['test_label'] = test_data['output']
-    f['test_meta'] = X_test_meta
+    f['test_party'] = party_test
+    f['test_job'] = job_test
+    f['test_state'] = state_test
     f['val'] = X_val
     f['val_label'] = Y_val
-    f['val_meta'] = X_val_meta
-    
-
+    f['val_party'] = party_val
+    f['val_job'] = job_val
+    f['val_state'] = state_val
