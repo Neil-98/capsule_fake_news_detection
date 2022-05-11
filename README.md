@@ -4,7 +4,9 @@
 
 Requirements: Code is written in Python (2.7) and requires Tensorflow (1.4.1).
 
-NLP project. Spring 2022. Implementation of Goldani et. al. [2020]. Forked from Zhao et. al.'s [2018] tensorflow-based capsule network implementation. Modification made to "networks.py" to include models (short_text_capsule_model() and long_text_capsule_model()) described in Goldani et. al. (2020) [Detecting Fake News with Capsule Neural Networks]. load_LIAR.py and load_ISOT.py contain our code to preprocess the LIAR and ISOT datasets, using stop word removal, tokenization, padding, and glove.6B.300d for creating an embedding matrix. The results are then saved to hdf5 files called ISOT.hdf5 and LIAR.hdf5, which are then passed as shell arguments main.py, modified to incorporate our additions to Zhao et. al.'s code.
+Forked from Zhao et. al.'s [2018] tensorflow-based capsule network implementation.
+
+Modification made to "networks.py" to include models (short_text_capsule_model() and long_text_capsule_model()) described in Goldani et. al. (2020) [Detecting Fake News with Capsule Neural Networks]. load_LIAR.py and load_ISOT.py contain our code to preprocess the LIAR and ISOT datasets, using stop word removal, tokenization, padding, and glove.6B.300d for creating an embedding matrix. The results are then saved to hdf5 files called ISOT.hdf5 and LIAR.hdf5, which are then passed as shell arguments main.py, modified to incorporate our additions to Zhao et. al.'s code.
 
 # Reference
 ```
