@@ -1,15 +1,24 @@
-# This repo is for CS533 NLP Course Projects (2022)
-# Detecting Fake News with Capsule Neural Networks
-Implementation of our paper 
-["Detecting Fake News with Capsule Neural Networks"](https://arxiv.org/pdf/2002.01030v1.pdf).
+# CS533: NLP (Spring 2022)
+# Course Project 
+# Implementation of Goldani et. al. ["Detecting Fake News with Capsule Neural Networks"](https://arxiv.org/pdf/2002.01030v1.pdf).
 
 Requirements: Code is written in Python (2.7) and requires Tensorflow (1.4.1).
 
-Fake news in the social media has started posing huge problems in the real-world. And numerous fake news detection algorithms has been put forward in the recent years. In this paper, we replicate and reimplement one such paper that makes use of capsule neural networks to enhance the accuracy of fake news identification system. We make use of both static and non-static pre-trained embeddings to capture the word representations. We also apply different levels of n-grams to capture different features. This approach provides 7.8\% and 1\% improvement in the performance over the existing state-of-the-art methods in two well-known datasets, ISOT and LIAR. 
+NLP project. Spring 2022. Implementation of Goldani et. al. [2020]. Forked from Zhao et. al.'s [2018] tensorflow-based capsule network implementation. Modification made to "networks.py" to include models (short_text_capsule_model() and long_text_capsule_model()) described in Goldani et. al. (2020) [Detecting Fake News with Capsule Neural Networks]. load_LIAR.py and load_ISOT.py contain our code to preprocess the LIAR and ISOT datasets, using stop word removal, tokenization, padding, and glove.6B.300d for creating an embedding matrix. The results are then saved to hdf5 files called ISOT.hdf5 and LIAR.hdf5, which are then passed as shell arguments main.py, modified to incorporate our additions to Zhao et. al.'s code.
 
 # Reference
-If you find our source code useful, please consider citing our work.
 ```
+@article{mohammad,
+  author    = {Mohammad Hadi Goldani and Saeedeh Momtazi and Reza Safabakhsh},
+  title     = {Detecting Fake News with Capsule Neural Networks},
+  journal   = {CoRR},
+  volume    = {abs/2002.01030},
+  year      = {2020},
+  url       = {https://arxiv.org/abs/2002.01030},
+  eprinttype = {arXiv},
+  eprint    = {2002.01030},
+}
+
 @inproceedings{zhao2018capsule,
   year = {2018},
   author = {Wei Zhao and Jianbo Ye and Min Yang and Zeyang Lei and Suofei Zhang and Zhou Zhao},
