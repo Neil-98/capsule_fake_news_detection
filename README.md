@@ -1,3 +1,4 @@
+#This repo is for CS533 NLP Course Projects (2022)
 # Detecting Fake News with Capsule Neural Networks
 Implementation of our paper 
 ["Detecting Fake News with Capsule Neural Networks"](https://arxiv.org/pdf/2002.01030v1.pdf).
