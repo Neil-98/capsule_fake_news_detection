@@ -4,7 +4,7 @@ Implementation of our paper
 
 Requirements: Code is written in Python (2.7) and requires Tensorflow (1.4.1).
 
-Fake news in the social media has started posing huge problems in the real-world. And numerous fake news detection algorithms has been put forward in the recent years. In this paper, we replicate and reimplement one such paper \cite{mohammad} that makes use of capsule neural networks to enhance the accuracy of fake news identification system. We make use of both static and non-static pre-trained embeddings to capture the word representations. We also apply different levels of n-grams to capture different features. This approach provides 7.8\% and 1\% improvement in the performance over the existing state-of-the-art methods in two well-known datasets, ISOT and LIAR. 
+Fake news in the social media has started posing huge problems in the real-world. And numerous fake news detection algorithms has been put forward in the recent years. In this paper, we replicate and reimplement one such paper that makes use of capsule neural networks to enhance the accuracy of fake news identification system. We make use of both static and non-static pre-trained embeddings to capture the word representations. We also apply different levels of n-grams to capture different features. This approach provides 7.8\% and 1\% improvement in the performance over the existing state-of-the-art methods in two well-known datasets, ISOT and LIAR. 
 
 # Reference
 If you find our source code useful, please consider citing our work.
