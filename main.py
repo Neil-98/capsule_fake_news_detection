@@ -10,6 +10,9 @@ from loss import spread_loss, cross_entropy, margin_loss
 from network import baseline_model_kimcnn, baseline_model_cnn, capsule_model_A, capsule_model_B, short_text_capsule_model, long_text_capsule_model
 from sklearn.utils import shuffle
 
+# import math
+
+
 tf.reset_default_graph()
 np.random.seed(0)
 tf.set_random_seed(0)
@@ -20,9 +23,9 @@ parser.add_argument('--embedding_type', type=str, default='nonstatic',
                     help='Options: rand (randomly initialized word embeddings), static (pre-trained embeddings from word2vec, static during learning), nonstatic (pre-trained embeddings, tuned during learning), multichannel (two embedding channels, one static and one nonstatic)')
 
 parser.add_argument('--dataset', type=str, default='ISOT',
-                    help='Options: reuters_multilabel_dataset, MR_dataset, SST_dataset, ISOT')
+                    help='Options: LIAR, ISOT')
 
-parser.add_argument('--loss_type', type=str, default='cross_entropy',
+parser.add_argument('--loss_type', type=str, default='margin_loss',
                     help='margin_loss, spread_loss, cross_entropy')
 
 parser.add_argument('--model_type', type=str, default='long_text',
@@ -31,12 +34,12 @@ parser.add_argument('--model_type', type=str, default='long_text',
 parser.add_argument('--has_test', type=int, default=1, help='If data has test, we use it. Otherwise, we use CV on folds')    
 parser.add_argument('--has_dev', type=int, default=1, help='If data has dev, we use it, otherwise we split from train')    
 
-parser.add_argument('--num_epochs', type=int, default=20, help='Number of training epochs')
-parser.add_argument('--batch_size', type=int, default=25, help='Batch size for training')
+parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
+parser.add_argument('--batch_size', type=int, default=500, help='Batch size for training')
 
 parser.add_argument('--use_orphan', type=bool, default='True', help='Add orphan capsule or not')
 parser.add_argument('--use_leaky', type=bool, default='False', help='Use leaky-softmax or not')
-parser.add_argument('--learning_rate', type=float, default=0.001, help='learning rate for training')#CNN 0.0005 
+parser.add_argument('--learning_rate', type=float, default=0.1, help='learning rate for training')#CNN 0.0005
 parser.add_argument('--margin', type=float, default=0.2, help='the initial value for spread loss')
 
 import json
@@ -44,8 +47,11 @@ args = parser.parse_args()
 params = vars(args)
 print(json.dumps(params, indent = 2))
 
-def rectify_storage_err(n_array):
+def rectify_storage_err_isot(n_array):
     return n_array.item()
+
+def rectify_storage_err_liar(one_hot_enc):
+    return one_hot_enc.argmax()
 
 def load_data(dataset):
     train, train_label = [], []
@@ -59,7 +65,10 @@ def load_data(dataset):
 
     w2v = list(f['w2v'])
     train = list(f['train'])
-    train_label = list(map(rectify_storage_err, list(f['train_label'])))
+    if(dataset == 'ISOT'):
+     train_label = list(map(rectify_storage_err_isot, list(f['train_label'])))
+    if(dataset == 'LIAR'):
+        train_label = list(map(rectify_storage_err_liar, list(f['train_label'])))
     # train_label = list(f['train_label'].apply(lambda x: x.item()))
     # print(type(train_label))
     if args.use_orphan:
@@ -70,7 +79,10 @@ def load_data(dataset):
     else:
         args.has_test = 1
         test = list(f['test'])
-        test_label = list(map(rectify_storage_err, list(f['test_label'])))
+        if dataset == 'ISOT':
+            test_label = list(map(rectify_storage_err_isot, list(f['test_label'])))
+        if dataset == 'LIAR':
+            test_label = list(map(rectify_storage_err_liar, list(f['train_label'])))
 
     for i, v in enumerate(train):
         if np.sum(v) == 0:
@@ -82,7 +94,20 @@ def load_data(dataset):
             del (test[i])
             del (test_label[i])
 
-    train, dev, train_label, dev_label = train_test_split(train, train_label, test_size=0.1, random_state=0)
+    if len(list(f['val'])) == 0:
+        args.has_dev = 0
+    else:
+        args.has_dev = 1
+        dev = list(f['val'])
+        dev_label = list(map(rectify_storage_err_liar, list(f['val_label'])))
+
+        for i, v in enumerate(dev):
+            if np.sum(v) == 0:
+                del (dev[i])
+                del (dev_label[i])
+
+    if args.has_dev == 0:
+        train, dev, train_label, dev_label = train_test_split(train, train_label, test_size=0.1, random_state=0)
     return train, train_label, test, test_label, dev, dev_label, w2v
 
 class BatchGenerator(object):
@@ -111,8 +136,14 @@ class BatchGenerator(object):
       self._cursor += self._batch_size
       return batch_x, batch_y
 
-train, train_label, test, test_label, dev, dev_label, w2v= load_data(args.dataset)    
+train, train_label, test, test_label, dev, dev_label, w2v= load_data(args.dataset)
 
+type(train)
+
+# def portion_data(size):
+#     return train[0:size], train_label[0:size], test[0:math.floor(size/4)], test_label[0:math.floor(size/4)], dev[0:math.floor(size/4)], dev_label[0:math.floor(size/4)]
+
+# train, train_label, test, test_label, dev, dev_label = portion_data(100)
 args.vocab_size = len(w2v)
 args.vec_size = w2v[0].shape[0]
 args.max_sent = len(train[0])
@@ -220,7 +251,7 @@ m = args.margin
 for epoch in range(args.num_epochs):
     for iteration in range(1, n_iterations_per_epoch + 1):                
         X_batch, y_batch = mr_train.next()     
-        y_batch = utils.to_categorical(y_batch, args.num_classes)        
+        y_batch = utils.to_categorical(y_batch, args.num_classes)
         _, loss_train, probs, capsule_pose = sess.run(
             [training_op, loss, activations, poses],
             feed_dict={X: X_batch[:,:args.max_sent],
@@ -262,12 +293,18 @@ for epoch in range(args.num_epochs):
     preds_probs = np.array(preds_list)                
     preds_probs[np.where( preds_probs >= threshold )] = 1.0
     preds_probs[np.where( preds_probs < threshold )] = 0.0 
-    
-    [precision, recall, F1, support] = \
-        precision_recall_fscore_support(y_list, preds_probs, average='samples')
-    acc = accuracy_score(y_list, preds_probs)
 
-    print ('\rER: %.3f' % acc, 'Precision: %.3f' % precision, 'Recall: %.3f' % recall, 'F1: %.3f' % F1)  
+    # print('preds_probs = ', preds_probs[0:5])
+    # print('pred_labels = ', preds_probs[0:5].argmax(axis = 1))
+
+    # print("y_list = ", y_list[0:5])
+
+    # [precision, recall, F1, support] = \
+    #     precision_recall_fscore_support(y_list, preds_probs.argmax(axis = 1), average='samples')
+    acc = accuracy_score(y_list, preds_probs.argmax(axis = 1))
+
+    # print ('\rER: %.3f' % acc, 'Precision: %.3f' % precision, 'Recall: %.3f' % recall, 'F1: %.3f' % F1)
+    print('\rER: %.3f' % acc)
     if args.model_type == 'CNN' or args.model_type == 'KIMCNN':
         lr = max(1e-6, lr * 0.8)
     if args.loss_type == 'margin_loss':    
